@@ -2,7 +2,11 @@
 Covid 19 Data Exploration 
 
 Skills used: Joins, CTE's, Temp Tables, Windows Functions, Aggregate Functions, Creating Views, Converting Data Types
+Objective: Explore the COVID-19 pandemic data to derive meaningful insights about infection rates, death rates, and vaccination progress.
+*/
 
+-- Extracting all data from the CovidDeaths table
+-- Filtering out rows with no continent data and ordering by location and date
 */
 
 Select *
@@ -10,8 +14,8 @@ From PortfolioProject..CovidDeaths
 Where continent is not null 
 order by 3,4
 
-
--- Select Data that we are going to be starting with
+-- Initial look at the data we'll be working with
+-- Viewing location, date, total cases, new cases, total deaths, and population
 
 Select Location, date, total_cases, new_cases, total_deaths, population
 From PortfolioProject..CovidDeaths
@@ -19,8 +23,8 @@ Where continent is not null
 order by 1,2
 
 
--- Total Cases vs Total Deaths
--- Shows likelihood of dying if you contract covid in your country
+-- Analyzing Total Cases vs Total Deaths
+-- This query calculates the percentage chance of dying from COVID-19 in the US
 
 Select Location, date, total_cases,total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
 From PortfolioProject..CovidDeaths
@@ -29,16 +33,16 @@ and continent is not null
 order by 1,2
 
 
--- Total Cases vs Population
--- Shows what percentage of population infected with Covid
+-- Analyzing Total Cases vs Population
+-- This query calculates the percentage of the population infected with COVID-19
 
 Select Location, date, Population, total_cases,  (total_cases/population)*100 as PercentPopulationInfected
 From PortfolioProject..CovidDeaths
 --Where location like '%states%'
 order by 1,2
 
-
--- Countries with Highest Infection Rate compared to Population
+-- Identifying Countries with the Highest Infection Rates
+-- This query finds countries with the highest infection counts relative to their population
 
 Select Location, Population, MAX(total_cases) as HighestInfectionCount,  Max((total_cases/population))*100 as PercentPopulationInfected
 From PortfolioProject..CovidDeaths
@@ -47,7 +51,8 @@ Group by Location, Population
 order by PercentPopulationInfected desc
 
 
--- Countries with Highest Death Count per Population
+-- Identifying Countries with the Highest Death Count per Population
+-- This query finds countries with the most deaths due to COVID-19
 
 Select Location, MAX(cast(Total_deaths as int)) as TotalDeathCount
 From PortfolioProject..CovidDeaths
@@ -58,9 +63,8 @@ order by TotalDeathCount desc
 
 
 
--- BREAKING THINGS DOWN BY CONTINENT
-
--- Showing contintents with the highest death count per population
+-- Breaking Down Data by Continent
+-- This query shows continents with the highest death counts relative to populatio
 
 Select continent, MAX(cast(Total_deaths as int)) as TotalDeathCount
 From PortfolioProject..CovidDeaths
@@ -71,7 +75,8 @@ order by TotalDeathCount desc
 
 
 
--- GLOBAL NUMBERS
+-- Global COVID-19 Numbers
+-- This query provides a global summary of total cases, total deaths, and death percentages
 
 Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
 From PortfolioProject..CovidDeaths
@@ -81,9 +86,8 @@ where continent is not null
 order by 1,2
 
 
-
 -- Total Population vs Vaccinations
--- Shows Percentage of Population that has recieved at least one Covid Vaccine
+-- Analyzing the percentage of the population vaccinated with at least one dose
 
 Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
 , SUM(CONVERT(int,vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.location, dea.Date) as RollingPeopleVaccinated
@@ -96,7 +100,8 @@ where dea.continent is not null
 order by 2,3
 
 
--- Using CTE to perform Calculation on Partition By in previous query
+-- Using CTE for Vaccination Calculation by Country
+-- This query tracks the rolling number of vaccinated individuals over time
 
 With PopvsVac (Continent, Location, Date, Population, New_Vaccinations, RollingPeopleVaccinated)
 as
@@ -146,7 +151,8 @@ From #PercentPopulationVaccinated
 
 
 
--- Creating View to store data for later visualizations
+-- Creating a View for Data Visualization
+-- Storing key vaccination data for later analysis and visualization
 
 Create View PercentPopulationVaccinated as
 Select dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
